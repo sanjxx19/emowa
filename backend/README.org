@@ -1,0 +1,36 @@
+#+title: How to use?
+
+** NOTE: MYSQL must be installed on the system
+1. Create a .env file in backend/
+   #+begin_src
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_USER=root
+    DB_PASSWORD=NotMYSQL
+    DB_NAME=social_media_db
+
+    SECRET_KEY=your-secret-key-change-this-in-production
+    ACCESS_TOKEN_EXPIRE_MINUTES=30
+
+    MODEL_CACHE_DIR=./models
+
+    ENVIRONMENT=development
+   #+end_src
+
+2. Create a virtual environment and install the dependencies
+   #+begin_src sh :session emowa
+    python -m venv .venv
+    source .venv/bin/activate
+    pip install -r requirements.txt
+   #+end_src
+
+3. Create and setup the database
+   #+begin_src sh :session emowa
+    python create_database.py
+    python setup_database.py
+   #+end_src
+
+4. Run the server
+   #+begin_src sh :session emowa
+    python run.py
+   #+end_src
