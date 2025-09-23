@@ -1,0 +1,4 @@
+#+title: EMOWA
+
+A Real-Time Sentiment-Aware Micro-Social Platform that integrates AI-driven
+sentiment analysis into every message exchanged between users.
