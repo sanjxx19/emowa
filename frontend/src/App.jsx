@@ -1,71 +1,73 @@
-import React, { useState, useEffect } from "react";
-import { api } from "./services/api";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, useNavigate } from "react-router-dom";
+
+import { LandingPage } from "./components/LandingPage";
 import { LoginForm } from "./components/auth/LoginForm";
 import { RegisterForm } from "./components/auth/RegisterForm";
 import { Sidebar } from "./components/layout/Sidebar";
 import { MainContent } from "./components/layout/MainContent";
+import { api } from "./services/api";
 
 const App = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState(!!api.token);
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [currentView, setCurrentView] = useState("feed");
-  const [user, setUser] = useState(null);
+  const isAuthenticated = !!api.token;
 
-  useEffect(() => {
-    if (isAuthenticated) {
-      const fetchUser = async () => {
-        try {
-          const userData = await api.getCurrentUser();
-          setUser(userData);
-        } catch (err) {
-          console.error("Failed to fetch user:", err);
-          setIsAuthenticated(false);
-          api.setToken(null);
-        }
-      };
-      fetchUser();
-    }
-  }, [isAuthenticated]);
+  return (
+    <Router>
+      <Routes>
+        {/* Landing Page */}
+        <Route path="/" element={<LandingPageWrapper />} />
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
-  };
+        {/* Login */}
+        <Route path="/login" element={<LoginFormWrapper />} />
 
-  const handleRegister = () => {
-    setIsRegistering(false);
-  };
+        {/* Register */}
+        <Route path="/register" element={<RegisterFormWrapper />} />
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center p-4">
-        {isRegistering ? (
-          <RegisterForm
-            onRegister={handleRegister}
-            onSwitchToLogin={() => setIsRegistering(false)}
-          />
-        ) : (
-          <LoginForm
-            onLogin={handleLogin}
-            onSwitchToRegister={() => setIsRegistering(true)}
-          />
-        )}
-      </div>
-    );
-  }
+        {/* Main App (after login) */}
+        <Route path="/app" element={<AuthenticatedApp />} />
+      </Routes>
+    </Router>
+  );
+};
 
+// Wrapper for LandingPage to navigate to Login/Register
+const LandingPageWrapper = () => {
+  const navigate = useNavigate();
+  return (
+    <LandingPage
+      onLoginClick={() => navigate("/login")}
+      onSignUpClick={() => navigate("/register")}
+    />
+  );
+};
+
+// Wrapper for LoginForm to go to main app after login
+const LoginFormWrapper = () => {
+  const navigate = useNavigate();
+  const handleLogin = () => navigate("/app");
+
+  return <LoginForm onLogin={handleLogin} onSwitchToRegister={() => navigate("/register")} />;
+};
+
+// Wrapper for RegisterForm to go to main app after register
+const RegisterFormWrapper = () => {
+  const navigate = useNavigate();
+  const handleRegister = () => navigate("/app");
+
+  return <RegisterForm onRegister={handleRegister} onSwitchToLogin={() => navigate("/login")} />;
+};
+
+// Your authenticated main app
+const AuthenticatedApp = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-6">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-1">
-            <Sidebar
-              currentView={currentView}
-              onViewChange={setCurrentView}
-              user={user}
-            />
+            <Sidebar currentView="feed" onViewChange={() => {}} user={{ user_name: "User" }} />
           </div>
           <div className="lg:col-span-3">
-            <MainContent view={currentView} onPostCreated={() => {}} />
+            <MainContent view="feed" onPostCreated={() => {}} />
           </div>
         </div>
       </div>
