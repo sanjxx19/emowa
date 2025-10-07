@@ -6,7 +6,7 @@ from app.database import get_db
 from app.api.deps import get_current_user
 from app.models.post import Post
 from app.models.user import User
-from app.schemas.post import PostCreate, PostResponse, PostAnalysis
+from app.schemas.post import PostCreate, PostResponse, PostAnalysis, PostUpdate
 from app.services.ai_service import ai_service
 import logging
 
@@ -149,3 +149,115 @@ def get_user_posts(
         Post.is_deleted == False
     ).order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
     return posts
+
+@router.put("/{post_id}", response_model=PostResponse)
+def update_post(
+    post_id: int,
+    post_update: PostUpdate,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Update post title and/or content"""
+    post = db.query(Post).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if post.user_id != current_user.user_id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this post")
+
+    if post_update.title is not None:
+        post.title = post_update.title
+
+    if post_update.content is not None:
+        post.content = post_update.content
+        # Re-analyze content if it changed
+        background_tasks.add_task(analyze_post_content, post.post_id, post.content, db)
+
+    db.commit()
+    db.refresh(post)
+    return post
+
+
+@router.post("/{post_id}/like")
+def like_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Like a post"""
+    from app.models.like import Like
+
+    # Check if post exists
+    post = db.query(Post).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # Check if already liked
+    existing_like = db.query(Like).filter(
+        Like.user_id == current_user.user_id,
+        Like.post_id == post_id
+    ).first()
+
+    if existing_like:
+        raise HTTPException(status_code=400, detail="Post already liked")
+
+    # Create like
+    like = Like(user_id=current_user.user_id, post_id=post_id)
+    db.add(like)
+    db.commit()
+
+    return {"message": "Post liked successfully"}
+
+
+@router.delete("/{post_id}/like")
+def unlike_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Unlike a post"""
+    from app.models.like import Like
+
+    like = db.query(Like).filter(
+        Like.user_id == current_user.user_id,
+        Like.post_id == post_id
+    ).first()
+
+    if not like:
+        raise HTTPException(status_code=404, detail="Like not found")
+
+    db.delete(like)
+    db.commit()
+
+    return {"message": "Post unliked successfully"}
+
+
+@router.get("/{post_id}/likes")
+def get_post_likes(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Get like statistics for a post"""
+    from app.models.like import Like
+    from sqlalchemy import func
+
+    # Check if post exists
+    post = db.query(Post).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    # Get total likes
+    total_likes = db.query(func.count(Like.like_id)).filter(Like.post_id == post_id).scalar()
+
+    # Check if current user liked it
+    user_has_liked = db.query(Like).filter(
+        Like.user_id == current_user.user_id,
+        Like.post_id == post_id
+    ).first() is not None
+
+    return {
+        "total_likes": total_likes,
+        "user_has_liked": user_has_liked
+    }

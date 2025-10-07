@@ -2,9 +2,11 @@ from pydantic import BaseModel
 from datetime import datetime
 from typing import Optional
 
+
 class PostCreate(BaseModel):
     title: str
     content: str
+
 
 class PostResponse(BaseModel):
     post_id: int
@@ -21,8 +23,14 @@ class PostResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class PostAnalysis(BaseModel):
     text: str
     sentiment: dict
     sarcasm: dict
     needs_review: bool
+
+
+class PostUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[str] = None

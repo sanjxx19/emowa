@@ -2,14 +2,17 @@ from pydantic import BaseModel, EmailStr
 from datetime import datetime
 from typing import Optional
 
+
 class UserCreate(BaseModel):
     user_name: str
     user_email: EmailStr
     password: str
 
+
 class UserLogin(BaseModel):
     username: str
     password: str
+
 
 class UserResponse(BaseModel):
     user_id: int
@@ -21,6 +24,13 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
+
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class UserUpdate(BaseModel):
+    user_email: Optional[EmailStr] = None
+    profile_pic_url: Optional[str] = None
+    password: Optional[str] = None

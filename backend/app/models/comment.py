@@ -24,3 +24,4 @@ class Comment(Base):
     post = relationship("Post", back_populates="comments")
     user = relationship("User", back_populates="comments")
     parent_comment = relationship("Comment", remote_side=[comment_id])
+    likes = relationship("Like", back_populates="comment")

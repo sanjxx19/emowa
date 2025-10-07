@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from app.database import engine, Base
 from app.api.v1 import auth, users, posts, comments
 import logging
@@ -20,10 +21,17 @@ app = FastAPI(
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=3600,  # Cache preflight response for 1 hour
+)
+
+app.add_middleware(
+    TrustedHostMiddleware,
+    allowed_hosts=["db.varunadhityagb.live", "localhost", "127.0.0.1"]
 )
 
 # Include routers

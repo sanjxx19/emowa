@@ -26,3 +26,4 @@ class User(Base):
         foreign_keys="UserRelation.followed_id",
         back_populates="followed"
     )
+    likes = relationship("Like", back_populates="user")

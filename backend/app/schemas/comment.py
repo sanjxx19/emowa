@@ -20,3 +20,7 @@ class CommentResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class CommentUpdate(BaseModel):
+    content: Optional[str] = None
