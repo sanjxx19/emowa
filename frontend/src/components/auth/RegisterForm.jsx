@@ -1,8 +1,9 @@
-// frontend/src/components/auth/RegisterForm.jsx
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 
-export const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
+export const RegisterForm = ({ onRegister }) => {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -31,92 +32,96 @@ export const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
     };
 
     return (
-        <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
-            <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">EMOWA</h1>
-                <p className="text-gray-600">Create your account</p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Username
-                    </label>
-                    <input
-                        type="text"
-                        required
-                        value={formData.username}
-                        onChange={(e) =>
-                            setFormData({
-                                ...formData,
-                                username: e.target.value,
-                            })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
+        <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-500 to-indigo-600">
+            <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
+                <div className="text-center mb-8">
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        EMOWA
+                    </h1>
+                    <p className="text-gray-600">Create your account</p>
                 </div>
 
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Email
-                    </label>
-                    <input
-                        type="email"
-                        required
-                        value={formData.email}
-                        onChange={(e) =>
-                            setFormData({
-                                ...formData,
-                                email: e.target.value,
-                            })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Password
-                    </label>
-                    <input
-                        type="password"
-                        required
-                        value={formData.password}
-                        onChange={(e) =>
-                            setFormData({
-                                ...formData,
-                                password: e.target.value,
-                            })
-                        }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    />
-                </div>
-
-                {error && (
-                    <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
-                        {error}
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Username
+                        </label>
+                        <input
+                            type="text"
+                            required
+                            value={formData.username}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    username: e.target.value,
+                                })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
                     </div>
-                )}
 
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-                >
-                    {loading ? "Registering..." : "Register"}
-                </button>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Email
+                        </label>
+                        <input
+                            type="email"
+                            required
+                            value={formData.email}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    email: e.target.value,
+                                })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
 
-                <p className="text-center text-gray-600">
-                    Already have an account?{" "}
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Password
+                        </label>
+                        <input
+                            type="password"
+                            required
+                            value={formData.password}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    password: e.target.value,
+                                })
+                            }
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                    </div>
+
+                    {error && (
+                        <div className="text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                            {error}
+                        </div>
+                    )}
+
                     <button
-                        type="button"
-                        onClick={onSwitchToLogin}
-                        className="text-blue-600 hover:underline"
+                        type="submit"
+                        disabled={loading}
+                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                     >
-                        Login
+                        {loading ? "Registering..." : "Register"}
                     </button>
-                </p>
-            </form>
+
+                    <p className="text-center text-gray-600">
+                        Already have an account?{" "}
+                        <button
+                            type="button"
+                            onClick={() => navigate("/login")}
+                            className="text-blue-600 hover:underline"
+                        >
+                            Login
+                        </button>
+                    </p>
+                </form>
+            </div>
         </div>
     );
 };
