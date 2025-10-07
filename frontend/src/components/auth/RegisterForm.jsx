@@ -1,8 +1,13 @@
+// frontend/src/components/auth/RegisterForm.jsx
 import React, { useState } from "react";
 import { api } from "../../services/api";
 
-export const LoginForm = ({ onLogin, onSwitchToRegister }) => {
-    const [formData, setFormData] = useState({ username: "", password: "" });
+export const RegisterForm = ({ onRegister, onSwitchToLogin }) => {
+    const [formData, setFormData] = useState({
+        username: "",
+        email: "",
+        password: "",
+    });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
 
@@ -12,10 +17,14 @@ export const LoginForm = ({ onLogin, onSwitchToRegister }) => {
         setError("");
 
         try {
-            await api.login(formData.username, formData.password);
-            onLogin();
+            await api.register(
+                formData.username,
+                formData.email,
+                formData.password,
+            );
+            onRegister();
         } catch (err) {
-            setError("Invalid username or password");
+            setError("Registration failed. Please try again.");
         } finally {
             setLoading(false);
         }
@@ -25,7 +34,7 @@ export const LoginForm = ({ onLogin, onSwitchToRegister }) => {
         <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
             <div className="text-center mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">EMOWA</h1>
-                <p className="text-gray-600">Sentiment-Aware Social Platform</p>
+                <p className="text-gray-600">Create your account</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -43,7 +52,25 @@ export const LoginForm = ({ onLogin, onSwitchToRegister }) => {
                                 username: e.target.value,
                             })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    />
+                </div>
+
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Email
+                    </label>
+                    <input
+                        type="email"
+                        required
+                        value={formData.email}
+                        onChange={(e) =>
+                            setFormData({
+                                ...formData,
+                                email: e.target.value,
+                            })
+                        }
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
 
@@ -61,7 +88,7 @@ export const LoginForm = ({ onLogin, onSwitchToRegister }) => {
                                 password: e.target.value,
                             })
                         }
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                     />
                 </div>
 
@@ -76,17 +103,17 @@ export const LoginForm = ({ onLogin, onSwitchToRegister }) => {
                     disabled={loading}
                     className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
                 >
-                    {loading ? "Logging in..." : "Login"}
+                    {loading ? "Registering..." : "Register"}
                 </button>
 
                 <p className="text-center text-gray-600">
-                    Don't have an account?{" "}
+                    Already have an account?{" "}
                     <button
                         type="button"
-                        onClick={onSwitchToRegister}
+                        onClick={onSwitchToLogin}
                         className="text-blue-600 hover:underline"
                     >
-                        Sign up
+                        Login
                     </button>
                 </p>
             </form>
