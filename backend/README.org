@@ -34,3 +34,60 @@
    #+begin_src sh :session emowa
     python run.py
    #+end_src
+
+
+* Complete API Endpoints
+
+** Authentication
+| Feature           | Method | Path                    | Input                                              | Output             | Access |
+|-------------------+--------+-------------------------+----------------------------------------------------+--------------------+--------|
+| User Registration | POST   | `/api/v1/auth/register` | Body: UserCreate (user_name, user_email, password) | Body: UserResponse | Public |
+| User Login        | POST   | `/api/v1/auth/login`    | Body: UserLogin (username, password)               | Body: Token        | Public |
+
+** Users
+| Feature             | Method | Path                             | Input                                                       | Output                | Access        |
+|---------------------+--------+----------------------------------+-------------------------------------------------------------+-----------------------+---------------|
+| Get Current User    | GET    | `/api/v1/users/me`               | Header: Authorization                                       | Body: UserResponse    | Authenticated |
+| Update Current User | PUT    | `/api/v1/users/me`               | Body: UserUpdate (user_email?, profile_pic_url?, password?) | Body: UserResponse    | Authenticated |
+| Get User Profile    | GET    | `/api/v1/users/{user_id}`        | Path: user_id                                               | Body: UserResponse    | Public        |
+| Follow User         | POST   | `/api/v1/users/{user_id}/follow` | Path: user_id                                               | Body: success message | Authenticated |
+| Unfollow User       | DELETE | `/api/v1/users/{user_id}/follow` | Path: user_id                                               | Body: success message | Authenticated |
+
+** Posts
+| Feature                 | Method | Path                                | Input                                                       | Output                   | Access        |
+|-------------------------+--------+-------------------------------------+-------------------------------------------------------------+--------------------------+---------------|
+| Create Post             | POST   | `/api/v1/posts/`                    | Body: PostCreate (title, content)                           | Body: PostResponse       | Authenticated |
+| Get Posts               | GET    | `/api/v1/posts/`                    | Query: skip?, limit?, sentiment_filter?, include_sarcastic? | Body: List[PostResponse] | Public        |
+| Get Single Post         | GET    | `/api/v1/posts/{post_id}`           | Path: post_id                                               | Body: PostResponse       | Public        |
+| Update Post             | PUT    | `/api/v1/posts/{post_id}`           | Body: PostUpdate (title?, content?)                         | Body: PostResponse       | Authenticated |
+| Delete Post             | DELETE | `/api/v1/posts/{post_id}`           | Path: post_id                                               | Body: success message    | Authenticated |
+| Get User Posts          | GET    | `/api/v1/posts/user/{user_id}`      | Path: user_id, Query: skip?, limit?                         | Body: List[PostResponse] | Public        |
+| Like Post               | POST   | `/api/v1/posts/{post_id}/like`      | Path: post_id                                               | Body: success message    | Authenticated |
+| Unlike Post             | DELETE | `/api/v1/posts/{post_id}/like`      | Path: post_id                                               | Body: success message    | Authenticated |
+| Get Post Likes          | GET    | `/api/v1/posts/{post_id}/likes`     | Path: post_id                                               | Body: LikeStats          | Authenticated |
+| Get Post Analysis       | GET    | `/api/v1/posts/{post_id}/analysis`  | Path: post_id                                               | Body: PostAnalysis       | Public        |
+| Analyze Text            | POST   | `/api/v1/posts/analyze`             | Query: text                                                 | Body: PostAnalysis       | Public        |
+| Get Sentiment Analytics | GET    | `/api/v1/posts/analytics/sentiment` | None                                                        | Body: analytics data     | Public        |
+
+** Comments
+| Feature           | Method | Path                                                  | Input                                             | Output                      | Access        |
+|-------------------+--------+-------------------------------------------------------+---------------------------------------------------+-----------------------------+---------------|
+| Create Comment    | POST   | `/api/v1/posts/{post_id}/comments`                    | Body: CommentCreate (content, parent_comment_id?) | Body: CommentResponse       | Authenticated |
+| Get Comments      | GET    | `/api/v1/posts/{post_id}/comments`                    | Path: post_id                                     | Body: List[CommentResponse] | Public        |
+| Update Comment    | PUT    | `/api/v1/posts/{post_id}/comments/{comment_id}`       | Body: CommentUpdate (content?)                    | Body: CommentResponse       | Authenticated |
+| Delete Comment    | DELETE | `/api/v1/posts/{post_id}/comments/{comment_id}`       | Path: post_id, comment_id                         | Body: success message       | Authenticated |
+| Like Comment      | POST   | `/api/v1/posts/{post_id}/comments/{comment_id}/like`  | Path: post_id, comment_id                         | Body: success message       | Authenticated |
+| Unlike Comment    | DELETE | `/api/v1/posts/{post_id}/comments/{comment_id}/like`  | Path: post_id, comment_id                         | Body: success message       | Authenticated |
+| Get Comment Likes | GET    | `/api/v1/posts/{post_id}/comments/{comment_id}/likes` | Path: post_id, comment_id                         | Body: LikeStats             | Authenticated |
+
+** Health
+| Feature      | Method | Path      | Input | Output        | Access |
+|--------------+--------+-----------+-------+---------------+--------|
+| Root         | GET    | `/`       | None  | Body: message | Public |
+| Health Check | GET    | `/health` | None  | Body: status  | Public |
+
+** Notes
+- `?` indicates optional fields
+- All authenticated endpoints require `Authorization: Bearer <token>` header
+- Edit endpoints allow partial updates (only include fields you want to change)
+- Username cannot be edited (security measure)

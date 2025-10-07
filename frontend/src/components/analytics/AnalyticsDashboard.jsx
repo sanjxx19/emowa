@@ -24,13 +24,13 @@ export const AnalyticsDashboard = () => {
 
     if (loading) {
         return (
-            <div className="bg-white rounded-xl shadow-lg p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
                 <div className="animate-pulse">
-                    <div className="h-4 bg-gray-200 rounded w-1/4 mb-4"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-4"></div>
                     <div className="space-y-3">
-                        <div className="h-8 bg-gray-200 rounded"></div>
-                        <div className="h-8 bg-gray-200 rounded"></div>
-                        <div className="h-8 bg-gray-200 rounded"></div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
+                        <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded"></div>
                     </div>
                 </div>
             </div>
@@ -46,15 +46,15 @@ export const AnalyticsDashboard = () => {
         ) || 0;
 
     return (
-        <div className="bg-white rounded-xl shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 Platform Analytics
             </h3>
 
             <div className="space-y-6">
                 <div>
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         Sentiment Distribution
                     </h4>
                     <div className="space-y-2">
@@ -70,12 +70,12 @@ export const AnalyticsDashboard = () => {
                                 >
                                     <div className="flex items-center gap-2">
                                         {getSentimentIcon(item.sentiment)}
-                                        <span className="text-sm font-medium capitalize">
+                                        <span className="text-sm font-medium capitalize text-gray-900 dark:text-white">
                                             {item.sentiment}
                                         </span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <div className="w-20 bg-gray-200 rounded-full h-2">
+                                        <div className="w-20 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                                             <div
                                                 className={`h-2 rounded-full ${
                                                     item.sentiment ===
@@ -91,7 +91,7 @@ export const AnalyticsDashboard = () => {
                                                 }}
                                             ></div>
                                         </div>
-                                        <span className="text-sm text-gray-600 w-12 text-right">
+                                        <span className="text-sm text-gray-600 dark:text-gray-400 w-12 text-right">
                                             {item.count}
                                         </span>
                                     </div>
@@ -101,26 +101,26 @@ export const AnalyticsDashboard = () => {
                     </div>
                 </div>
 
-                <div className="border-t pt-4">
-                    <h4 className="text-sm font-medium text-gray-700 mb-3">
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+                    <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
                         Sarcasm Statistics
                     </h4>
                     <div className="grid grid-cols-2 gap-4">
-                        <div className="bg-gray-50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-gray-900">
+                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
+                            <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {analytics.sarcasm_stats?.total_analyzed || 0}
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
                                 Total Analyzed
                             </div>
                         </div>
-                        <div className="bg-purple-50 rounded-lg p-3">
-                            <div className="text-2xl font-bold text-purple-600">
+                        <div className="bg-purple-50 dark:bg-purple-900/30 rounded-lg p-3">
+                            <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                                 {analytics.sarcasm_stats?.sarcasm_percentage ||
                                     0}
                                 %
                             </div>
-                            <div className="text-sm text-gray-600">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
                                 Sarcastic
                             </div>
                         </div>

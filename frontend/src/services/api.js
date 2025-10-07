@@ -92,6 +92,29 @@ class ApiService {
     async getCurrentUser() {
         return this.request("/users/me");
     }
+
+    async updateCurrentUser(userData) {
+        return this.request("/users/me", {
+            method: "PUT",
+            body: JSON.stringify(userData),
+        });
+    }
+
+    async getUserProfile(userId) {
+        return this.request(`/users/${userId}`);
+    }
+
+    async followUser(userId) {
+        return this.request(`/users/${userId}/follow`, {
+            method: "POST",
+        });
+    }
+
+    async unfollowUser(userId) {
+        return this.request(`/users/${userId}/follow`, {
+            method: "DELETE",
+        });
+    }
 }
 
 export const api = new ApiService();

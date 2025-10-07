@@ -47,8 +47,8 @@ export const CreatePostForm = ({ onPostCreated }) => {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-6 transition-colors">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                 Create New Post
             </h3>
 
@@ -61,7 +61,7 @@ export const CreatePostForm = ({ onPostCreated }) => {
                         onChange={(e) =>
                             setFormData({ ...formData, title: e.target.value })
                         }
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         required
                     />
                 </div>
@@ -76,7 +76,7 @@ export const CreatePostForm = ({ onPostCreated }) => {
                                 content: e.target.value,
                             })
                         }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px]"
+                        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[120px] bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400"
                         required
                     />
 
@@ -85,7 +85,7 @@ export const CreatePostForm = ({ onPostCreated }) => {
                             <button
                                 type="button"
                                 onClick={() => setShowAnalysis(!showAnalysis)}
-                                className="p-2 text-gray-500 hover:text-gray-700 transition-colors"
+                                className="p-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
                             >
                                 {showAnalysis ? (
                                     <EyeOff className="w-4 h-4" />
@@ -98,8 +98,8 @@ export const CreatePostForm = ({ onPostCreated }) => {
                 </div>
 
                 {analysis && showAnalysis && (
-                    <div className="bg-gray-50 rounded-lg p-4 space-y-3">
-                        <h4 className="font-medium text-gray-900 flex items-center gap-2">
+                    <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 space-y-3">
+                        <h4 className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                             <BarChart3 className="w-4 h-4" />
                             AI Analysis Preview
                         </h4>
@@ -119,7 +119,7 @@ export const CreatePostForm = ({ onPostCreated }) => {
                             </span>
 
                             {analysis.sarcasm?.is_sarcastic && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800 border border-purple-200">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border border-purple-200 dark:border-purple-700">
                                     <Zap className="w-3 h-3" />
                                     Sarcastic (
                                     {Math.round(
@@ -130,7 +130,7 @@ export const CreatePostForm = ({ onPostCreated }) => {
                             )}
 
                             {analysis.needs_review && (
-                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border border-orange-200 dark:border-orange-700">
                                     <AlertTriangle className="w-3 h-3" />
                                     Needs Review
                                 </span>
@@ -147,7 +147,7 @@ export const CreatePostForm = ({ onPostCreated }) => {
                             !formData.title.trim() ||
                             !formData.content.trim()
                         }
-                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
+                        className="bg-blue-600 dark:bg-blue-700 text-white px-6 py-2 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
                     >
                         {loading ? (
                             <>
