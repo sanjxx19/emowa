@@ -10,6 +10,7 @@ class Comment(Base):
     post_id = Column(Integer, ForeignKey("posts.post_id"))
     user_id = Column(Integer, ForeignKey("users.user_id"))
     created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     content = Column(Text)
     parent_comment_id = Column(Integer, ForeignKey("comments.comment_id"), nullable=True)
 

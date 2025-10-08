@@ -9,6 +9,7 @@ import { LandingPage } from "./components/LandingPage";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { DarkModeToggle } from "./components/layout/DarkModeToggle";
 import { ProfilePage } from "./components/profile/ProfilePage";
+import { PostDetailView } from "./components/posts/PostDetailView";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(!!api.token);
@@ -46,6 +47,17 @@ const App = () => {
   return (
     <DarkModeProvider>
       <Routes>
+        {/* Public Post Detail Route - No Authentication Required */}
+        <Route
+          path="/post/:postId"
+          element={
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+              <DarkModeToggle />
+              <PostDetailView />
+            </div>
+          }
+        />
+
         <Route
           path="/"
           element={

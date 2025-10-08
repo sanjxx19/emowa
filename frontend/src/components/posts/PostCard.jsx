@@ -1,17 +1,75 @@
-import React from "react";
-import { Heart, MessageCircle, Zap } from "lucide-react";
-import { formatDate, getSentimentIcon, getSentimentColor } from '../../utils/formatting';
+import React, { useState, useEffect } from "react";
+import { Heart, MessageCircle, Zap, Share2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { api } from "../../services/api";
+import {
+  formatDate,
+  getSentimentIcon,
+  getSentimentColor,
+} from "../../utils/formatting";
 
 export const PostCard = ({ post }) => {
+  const navigate = useNavigate();
+  const [isLiked, setIsLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [showShareTooltip, setShowShareTooltip] = useState(false);
+
+  useEffect(() => {
+    fetchLikeStatus();
+  }, [post.post_id]);
+
+  const fetchLikeStatus = async () => {
+    try {
+      const likeData = await api.getPostLikes(post.post_id);
+      setLikeCount(likeData.total_likes || 0);
+      setIsLiked(likeData.user_has_liked || false);
+    } catch (err) {
+      console.error("Failed to fetch like status:", err);
+    }
+  };
+
+  const handleLike = async (e) => {
+    e.stopPropagation();
+    try {
+      if (isLiked) {
+        await api.unlikePost(post.post_id);
+        setIsLiked(false);
+        setLikeCount((prev) => Math.max(0, prev - 1));
+      } else {
+        await api.likePost(post.post_id);
+        setIsLiked(true);
+        setLikeCount((prev) => prev + 1);
+      }
+    } catch (err) {
+      console.error("Failed to toggle like:", err);
+    }
+  };
+
+  const handleShare = (e) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/post/${post.post_id}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setShowShareTooltip(true);
+      setTimeout(() => setShowShareTooltip(false), 2000);
+    });
+  };
+
+  const handleCardClick = () => {
+    navigate(`/post/${post.post_id}`);
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-4 hover:shadow-xl transition-all">
+    <div
+      onClick={handleCardClick}
+      className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-4 hover:shadow-xl transition-all cursor-pointer"
+    >
       <div className="flex items-start justify-between mb-4">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             {post.title}
           </h3>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            User {post.user_id} • {formatDate(post.created_at)}
+            {post.user_name} • {formatDate(post.created_at)}
           </p>
         </div>
 
@@ -36,18 +94,47 @@ export const PostCard = ({ post }) => {
         )}
       </div>
 
-      <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">{post.content}</p>
+      <p className="text-gray-700 dark:text-gray-300 mb-4 leading-relaxed">
+        {post.content}
+      </p>
 
       <div className="flex items-center justify-between pt-4 border-t border-gray-100 dark:border-gray-700">
         <div className="flex items-center space-x-4">
-          <button className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition-colors">
-            <Heart className="w-4 h-4" />
-            <span className="text-sm">Like</span>
+          <button
+            onClick={handleLike}
+            className={`flex items-center space-x-1 transition-colors ${
+              isLiked
+                ? "text-red-500"
+                : "text-gray-500 dark:text-gray-400 hover:text-red-500 dark:hover:text-red-400"
+            }`}
+          >
+            <Heart className={`w-4 h-4 ${isLiked ? "fill-current" : ""}`} />
+            <span className="text-sm font-medium">{likeCount}</span>
           </button>
-          <button className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/post/${post.post_id}`);
+            }}
+            className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 transition-colors"
+          >
             <MessageCircle className="w-4 h-4" />
             <span className="text-sm">Comment</span>
           </button>
+          <div className="relative">
+            <button
+              onClick={handleShare}
+              className="flex items-center space-x-1 text-gray-500 dark:text-gray-400 hover:text-green-500 dark:hover:text-green-400 transition-colors"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="text-sm">Share</span>
+            </button>
+            {showShareTooltip && (
+              <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 dark:bg-gray-700 text-white text-xs rounded-lg whitespace-nowrap">
+                Link copied!
+              </div>
+            )}
+          </div>
         </div>
 
         {post.sentiment_confidence && (

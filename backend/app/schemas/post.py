@@ -13,6 +13,7 @@ class PostResponse(BaseModel):
     title: str
     content: str
     user_id: int
+    user_name: str  # Added user_name
     created_at: datetime
     sentiment_label: Optional[str] = None
     sentiment_confidence: Optional[float] = None

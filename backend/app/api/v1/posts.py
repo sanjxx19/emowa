@@ -31,6 +31,22 @@ def analyze_post_content(post_id: int, content: str, db_session):
     except Exception as e:
         logger.error(f"Failed to analyze post {post_id}: {e}")
 
+def post_to_response(post: Post) -> dict:
+    """Convert Post model to response dict with user_name"""
+    return {
+        "post_id": post.post_id,
+        "title": post.title,
+        "content": post.content,
+        "user_id": post.user_id,
+        "user_name": post.user.user_name,
+        "created_at": post.created_at,
+        "sentiment_label": post.sentiment_label,
+        "sentiment_confidence": post.sentiment_confidence,
+        "is_sarcastic": post.is_sarcastic,
+        "sarcasm_confidence": post.sarcasm_confidence,
+        "analyzed_at": post.analyzed_at
+    }
+
 @router.post("/", response_model=PostResponse)
 def create_post(
     post: PostCreate,
@@ -51,7 +67,7 @@ def create_post(
     # Analyze content in background
     background_tasks.add_task(analyze_post_content, db_post.post_id, post.content, db)
 
-    return db_post
+    return post_to_response(db_post)
 
 @router.get("/", response_model=List[PostResponse])
 def get_posts(
@@ -61,7 +77,7 @@ def get_posts(
     include_sarcastic: bool = True,
     db: Session = Depends(get_db)
 ):
-    query = db.query(Post).filter(Post.is_deleted == False)
+    query = db.query(Post).join(User).filter(Post.is_deleted == False)
 
     if sentiment_filter:
         query = query.filter(Post.sentiment_label == sentiment_filter.lower())
@@ -70,14 +86,14 @@ def get_posts(
         query = query.filter(Post.is_sarcastic == False)
 
     posts = query.order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
-    return posts
+    return [post_to_response(post) for post in posts]
 
 @router.get("/{post_id}", response_model=PostResponse)
 def get_post(post_id: int, db: Session = Depends(get_db)):
-    post = db.query(Post).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    post = db.query(Post).join(User).filter(Post.post_id == post_id, Post.is_deleted == False).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
-    return post
+    return post_to_response(post)
 
 @router.get("/{post_id}/analysis", response_model=PostAnalysis)
 def get_post_analysis(post_id: int, db: Session = Depends(get_db)):
@@ -144,11 +160,11 @@ def get_user_posts(
     limit: int = 20,
     db: Session = Depends(get_db)
 ):
-    posts = db.query(Post).filter(
+    posts = db.query(Post).join(User).filter(
         Post.user_id == user_id,
         Post.is_deleted == False
     ).order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
-    return posts
+    return [post_to_response(post) for post in posts]
 
 @router.put("/{post_id}", response_model=PostResponse)
 def update_post(
@@ -159,7 +175,7 @@ def update_post(
     current_user: User = Depends(get_current_user)
 ):
     """Update post title and/or content"""
-    post = db.query(Post).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    post = db.query(Post).join(User).filter(Post.post_id == post_id, Post.is_deleted == False).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
@@ -176,7 +192,7 @@ def update_post(
 
     db.commit()
     db.refresh(post)
-    return post
+    return post_to_response(post)
 
 
 @router.post("/{post_id}/like")
