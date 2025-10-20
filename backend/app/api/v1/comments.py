@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
 from app.database import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_user_optional
 from app.models.comment import Comment
 from app.models.post import Post
 from app.models.user import User
@@ -53,7 +53,7 @@ def comment_to_response(comment: Comment, current_user_id: Optional[int] = None,
         "user_name": comment.user.user_name,
         "content": comment.content,
         "created_at": comment.created_at,
-        "updated_at": comment.analyzed_at or comment.created_at,  # Use analyzed_at as proxy for updated_at
+        "updated_at": comment.analyzed_at or comment.created_at,
         "parent_comment_id": comment.parent_comment_id,
         "sentiment_label": comment.sentiment_label,
         "sentiment_confidence": comment.sentiment_confidence,
@@ -96,9 +96,9 @@ def create_comment(
 def get_comments(
     post_id: int,
     db: Session = Depends(get_db),
-    current_user: Optional[User] = None
+    current_user: Optional[User] = Depends(get_current_user_optional)
 ):
-    """Get all comments for a post - public endpoint"""
+    """Get all comments for a post - public endpoint with optional authentication"""
     comments = db.query(Comment).join(User).filter(Comment.post_id == post_id).all()
 
     current_user_id = current_user.user_id if current_user else None

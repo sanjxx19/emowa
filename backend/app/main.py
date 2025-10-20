@@ -31,7 +31,7 @@ app.add_middleware(
 
 app.add_middleware(
     TrustedHostMiddleware,
-    allowed_hosts=["db.varunadhityagb.live", "localhost", "127.0.0.1", "0.0.0.0", "172.29.22.232"]
+    allowed_hosts=["db.varunadhityagb.live", "localhost", "127.0.0.1", "0.0.0.0", "172.29.22.232", "100.69.58.49"]
 )
 
 # Include routers
