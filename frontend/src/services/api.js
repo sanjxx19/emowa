@@ -4,7 +4,8 @@ class ApiService {
     constructor() {
         this.token = null;
         if (typeof window !== "undefined") {
-            this.token = sessionStorage.getItem("token");
+            // Changed from sessionStorage to localStorage for persistence
+            this.token = localStorage.getItem("token");
         }
     }
 
@@ -12,9 +13,9 @@ class ApiService {
         this.token = token;
         if (typeof window !== "undefined") {
             if (token) {
-                sessionStorage.setItem("token", token);
+                localStorage.setItem("token", token);
             } else {
-                sessionStorage.removeItem("token");
+                localStorage.removeItem("token");
             }
         }
     }
@@ -25,7 +26,6 @@ class ApiService {
             ...options.headers,
         };
 
-        // Only add Authorization header if token exists and endpoint is not public
         if (this.token && !options.skipAuth) {
             headers.Authorization = `Bearer ${this.token}`;
         }
@@ -79,7 +79,7 @@ class ApiService {
     }
 
     async getPost(postId) {
-        return this.request(`/posts/${postId}`);
+        return this.request(`/posts/${postId}`, { skipAuth: true });
     }
 
     async createPost(title, content) {
@@ -106,7 +106,7 @@ class ApiService {
     }
 
     async getComments(postId) {
-        return this.request(`/posts/${postId}/comments`);
+        return this.request(`/posts/${postId}/comments`, { skipAuth: true });
     }
 
     async createComment(postId, content, parentCommentId = null) {
@@ -149,11 +149,13 @@ class ApiService {
     }
 
     async analyzeText(text) {
-        return this.request(`/posts/analyze?text=${encodeURIComponent(text)}`);
+        return this.request(`/posts/analyze?text=${encodeURIComponent(text)}`, {
+            skipAuth: true,
+        });
     }
 
     async getSentimentAnalytics() {
-        return this.request("/posts/analytics/sentiment");
+        return this.request("/posts/analytics/sentiment", { skipAuth: true });
     }
 
     async getCurrentUser() {
@@ -168,7 +170,7 @@ class ApiService {
     }
 
     async getUserProfile(userId) {
-        return this.request(`/users/${userId}`);
+        return this.request(`/users/${userId}`, { skipAuth: true });
     }
 
     async followUser(userId) {
@@ -181,6 +183,56 @@ class ApiService {
         return this.request(`/users/${userId}/follow`, {
             method: "DELETE",
         });
+    }
+
+    async getUserPosts(userId, skip = 0, limit = 20) {
+        return this.request(
+            `/posts/user/${userId}?skip=${skip}&limit=${limit}`,
+            { skipAuth: true },
+        );
+    }
+
+    // New method to check follow status
+    async getFollowStatus(userId) {
+        return this.request(`/users/${userId}/follow-status`);
+    }
+
+    // Admin endpoints
+    async getAdminStats() {
+        return this.request("/admin/stats");
+    }
+
+    async getRecentUsers(limit = 10) {
+        return this.request(`/admin/recent-users?limit=${limit}`);
+    }
+
+    async getFlaggedPosts(skip = 0, limit = 20) {
+        return this.request(`/admin/flagged-posts?skip=${skip}&limit=${limit}`);
+    }
+
+    async adminDeletePost(postId) {
+        return this.request(`/admin/posts/${postId}`, {
+            method: "DELETE",
+        });
+    }
+
+    async toggleAdminStatus(userId) {
+        return this.request(`/admin/users/${userId}/admin`, {
+            method: "PUT",
+        });
+    }
+
+    async getAllUsers(skip = 0, limit = 50, search = null) {
+        const params = new URLSearchParams({
+            skip: skip.toString(),
+            limit: limit.toString(),
+        });
+        if (search) params.append("search", search);
+        return this.request(`/admin/users?${params}`);
+    }
+
+    async getUserStats(userId) {
+        return this.request(`/users/${userId}/stats`, { skipAuth: true });
     }
 }
 

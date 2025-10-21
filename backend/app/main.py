@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from app.database import engine, Base
-from app.api.v1 import auth, users, posts, comments
+from app.api.v1 import auth, users, posts, comments, admin
 import logging
 
 # Configure logging
@@ -26,7 +26,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["*"],
-    max_age=3600,  # Cache preflight response for 1 hour
+    max_age=3600,
 )
 
 app.add_middleware(
@@ -39,6 +39,7 @@ app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
 app.include_router(users.router, prefix="/api/v1/users", tags=["users"])
 app.include_router(posts.router, prefix="/api/v1/posts", tags=["posts"])
 app.include_router(comments.router, prefix="/api/v1/posts", tags=["comments"])
+app.include_router(admin.router, prefix="/api/v1/admin", tags=["admin"])  # Add admin router
 
 @app.get("/")
 def root():

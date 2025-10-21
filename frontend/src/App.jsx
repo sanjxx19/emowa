@@ -8,8 +8,9 @@ import { MainContent } from "./components/layout/MainContent";
 import { LandingPage } from "./components/LandingPage";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
 import { DarkModeToggle } from "./components/layout/DarkModeToggle";
-import { ProfilePage } from "./components/profile/ProfilePage";
 import { PostDetailView } from "./components/posts/PostDetailView";
+import { UserProfilePage } from "./components/profile/UserProfilePage";
+import { AdminDashboard } from "./components/admin/AdminDashboard";
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(!!api.token);
@@ -47,7 +48,7 @@ const App = () => {
   return (
     <DarkModeProvider>
       <Routes>
-        {/* Public Post Detail Route - No Authentication Required */}
+        {/* Public Post Detail Route */}
         <Route
           path="/post/:postId"
           element={
@@ -58,6 +59,18 @@ const App = () => {
           }
         />
 
+        {/* Public User Profile Route */}
+        <Route
+          path="/user/:userId"
+          element={
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
+              <DarkModeToggle />
+              <UserProfilePage />
+            </div>
+          }
+        />
+
+        {/* Main App Route */}
         <Route
           path="/"
           element={
@@ -74,10 +87,14 @@ const App = () => {
                       />
                     </div>
                     <div className="lg:col-span-3">
-                      <MainContent
-                        view={currentView}
-                        onPostCreated={() => {}}
-                      />
+                      {currentView === "admin" && user?.is_admin ? (
+                        <AdminDashboard />
+                      ) : (
+                        <MainContent
+                          view={currentView}
+                          onPostCreated={() => {}}
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -88,11 +105,14 @@ const App = () => {
           }
         />
 
+        {/* Auth Routes */}
         <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
         <Route
           path="/signup"
           element={<RegisterForm onRegister={handleRegister} />}
         />
+
+        {/* Catch All */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </DarkModeProvider>

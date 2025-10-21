@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Heart, MessageCircle, Zap, Share2 } from "lucide-react";
+import {
+  Heart,
+  MessageCircle,
+  Zap,
+  Share2,
+  User as UserIcon,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import {
@@ -58,19 +64,33 @@ export const PostCard = ({ post }) => {
     navigate(`/post/${post.post_id}`);
   };
 
+  const handleUserClick = (e) => {
+    e.stopPropagation();
+    navigate(`/user/${post.user_id}`);
+  };
+
   return (
     <div
       onClick={handleCardClick}
       className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 mb-4 hover:shadow-xl transition-all cursor-pointer"
     >
       <div className="flex items-start justify-between mb-4">
-        <div>
+        <div className="flex-1">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-1">
             {post.title}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
-            {post.user_name} • {formatDate(post.created_at)}
-          </p>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleUserClick}
+              className="flex items-center gap-1 text-sm text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              <UserIcon className="w-3 h-3" />
+              {post.user_name}
+            </button>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              • {formatDate(post.created_at)}
+            </span>
+          </div>
         </div>
 
         {(post.sentiment_label || post.is_sarcastic) && (

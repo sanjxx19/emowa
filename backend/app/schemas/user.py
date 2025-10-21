@@ -18,6 +18,7 @@ class UserResponse(BaseModel):
     user_id: int
     user_name: str
     user_email: str
+    is_admin: bool = False
     created_at: datetime
     profile_pic_url: Optional[str] = None
 

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DateTime, Text
+from sqlalchemy import Column, Integer, String, DateTime, Text, Boolean
 from sqlalchemy.orm import relationship
 from app.database import Base
 from datetime import datetime
@@ -12,6 +12,7 @@ class User(Base):
     password_hash = Column(String(255))
     created_at = Column(DateTime, default=datetime.utcnow)
     profile_pic_url = Column(String(500), nullable=True)
+    is_admin = Column(Boolean, default=False)  # New admin field
 
     # Relationships
     posts = relationship("Post", back_populates="user")
