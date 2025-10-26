@@ -89,6 +89,12 @@ class ApiService {
         });
     }
 
+    async deletePost(postId) {
+        return this.request(`/posts/${postId}`, {
+            method: "DELETE",
+        });
+    }
+
     async likePost(postId) {
         return this.request(`/posts/${postId}/like`, {
             method: "POST",

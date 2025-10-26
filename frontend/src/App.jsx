@@ -3,11 +3,11 @@ import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { api } from "./services/api";
 import { LoginForm } from "./components/auth/LoginForm";
 import { RegisterForm } from "./components/auth/RegisterForm";
+import { Header } from "./components/layout/Header";
 import { Sidebar } from "./components/layout/Sidebar";
 import { MainContent } from "./components/layout/MainContent";
 import { LandingPage } from "./components/LandingPage";
 import { DarkModeProvider } from "./contexts/DarkModeContext";
-import { DarkModeToggle } from "./components/layout/DarkModeToggle";
 import { PostDetailView } from "./components/posts/PostDetailView";
 import { UserProfilePage } from "./components/profile/UserProfilePage";
 import { AdminDashboard } from "./components/admin/AdminDashboard";
@@ -53,7 +53,7 @@ const App = () => {
           path="/post/:postId"
           element={
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-              <DarkModeToggle />
+              <Header isAuthenticated={isAuthenticated} user={user} />
               <PostDetailView />
             </div>
           }
@@ -64,7 +64,7 @@ const App = () => {
           path="/user/:userId"
           element={
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-              <DarkModeToggle />
+              <Header isAuthenticated={isAuthenticated} user={user} />
               <UserProfilePage />
             </div>
           }
@@ -76,7 +76,7 @@ const App = () => {
           element={
             isAuthenticated ? (
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-                <DarkModeToggle />
+                <Header isAuthenticated={isAuthenticated} user={user} />
                 <div className="container mx-auto px-4 py-6">
                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                     <div className="lg:col-span-1">
@@ -100,16 +100,32 @@ const App = () => {
                 </div>
               </div>
             ) : (
-              <LandingPage />
+              <>
+                <Header isAuthenticated={false} />
+                <LandingPage />
+              </>
             )
           }
         />
 
         {/* Auth Routes */}
-        <Route path="/login" element={<LoginForm onLogin={handleLogin} />} />
+        <Route
+          path="/login"
+          element={
+            <>
+              <Header isAuthenticated={false} />
+              <LoginForm onLogin={handleLogin} />
+            </>
+          }
+        />
         <Route
           path="/signup"
-          element={<RegisterForm onRegister={handleRegister} />}
+          element={
+            <>
+              <Header isAuthenticated={false} />
+              <RegisterForm onRegister={handleRegister} />
+            </>
+          }
         />
 
         {/* Catch All */}

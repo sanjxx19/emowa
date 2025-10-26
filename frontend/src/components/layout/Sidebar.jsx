@@ -1,6 +1,5 @@
 import React from "react";
-import { User, MessageCircle, BarChart3, Shield } from "lucide-react";
-import { api } from "../../services/api";
+import { User, MessageCircle, Shield } from "lucide-react";
 
 export const Sidebar = ({ currentView, onViewChange, user }) => {
     const menuItems = [
@@ -21,17 +20,37 @@ export const Sidebar = ({ currentView, onViewChange, user }) => {
     return (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
             <div className="mb-6">
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                    EMOWA
-                </h2>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Welcome, {user?.user_name}
-                    {user?.is_admin && (
-                        <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
-                            Admin
-                        </span>
+                <div className="flex items-center gap-3 mb-2">
+                    {/* Profile Picture */}
+                    {user?.profile_pic_url ? (
+                        <img
+                            src={user.profile_pic_url}
+                            alt={user.user_name}
+                            className="w-12 h-12 rounded-full object-cover border-2 border-blue-500"
+                        />
+                    ) : (
+                        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full flex items-center justify-center border-2 border-blue-500">
+                            <span className="text-white text-lg font-bold">
+                                {user?.user_name?.charAt(0).toUpperCase()}
+                            </span>
+                        </div>
                     )}
-                </p>
+
+                    <div className="flex-1">
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
+                            Welcome back,
+                        </p>
+                        <h2 className="text-lg font-bold text-gray-900 dark:text-white">
+                            {user?.user_name}
+                        </h2>
+                    </div>
+                </div>
+
+                {user?.is_admin && (
+                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200">
+                        Admin
+                    </span>
+                )}
             </div>
 
             <nav className="space-y-2">
@@ -55,18 +74,6 @@ export const Sidebar = ({ currentView, onViewChange, user }) => {
                     );
                 })}
             </nav>
-
-            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <button
-                    onClick={() => {
-                        api.setToken(null);
-                        window.location.reload();
-                    }}
-                    className="w-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-2 rounded-lg text-left transition-colors"
-                >
-                    Logout
-                </button>
-            </div>
         </div>
     );
 };

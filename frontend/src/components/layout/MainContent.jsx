@@ -32,6 +32,13 @@ export const MainContent = ({ view, onPostCreated }) => {
         onPostCreated();
     };
 
+    const handlePostDeleted = (postId) => {
+        // Remove the deleted post from the UI
+        setPosts((prevPosts) =>
+            prevPosts.filter((post) => post.post_id !== postId),
+        );
+    };
+
     if (view === "analytics") {
         return <AnalyticsDashboard />;
     }
@@ -74,7 +81,11 @@ export const MainContent = ({ view, onPostCreated }) => {
                     </div>
                 ) : posts.length > 0 ? (
                     posts.map((post) => (
-                        <PostCard key={post.post_id} post={post} />
+                        <PostCard
+                            key={post.post_id}
+                            post={post}
+                            onPostDeleted={handlePostDeleted}
+                        />
                     ))
                 ) : (
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center transition-colors">
