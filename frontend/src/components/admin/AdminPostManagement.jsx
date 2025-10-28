@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Trash2, AlertTriangle, RefreshCw, Filter } from "lucide-react";
+import { Trash2, AlertTriangle, RefreshCw, Filter, Shield } from "lucide-react";
 import { api } from "../../services/api";
 import {
     formatDate,
