@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { Shield, Users, FileText, TrendingUp } from "lucide-react";
+import {
+    Shield,
+    Users,
+    FileText,
+    TrendingUp,
+} from "lucide-react";
 import { api } from "../../services/api";
 import { AnalyticsDashboard } from "../analytics/AnalyticsDashboard";
+import { AdminPostManagement } from "./AdminPostManagement";
 
 export const AdminDashboard = () => {
     const [stats, setStats] = useState({
@@ -145,6 +151,8 @@ export const AdminDashboard = () => {
 
             {/* Analytics Section */}
             <AnalyticsDashboard />
+            
+            <AdminPostManagement />
         </div>
     );
 };
