@@ -21,7 +21,13 @@ class Post(Base):
     sarcasm_confidence = Column(Float)
     analyzed_at = Column(DateTime, default=datetime.utcnow)
 
-    # Relationships
-    user = relationship("User", back_populates="posts")
+    # Manual flagging
+    is_flagged = Column(Boolean, default=False)
+    flagged_at = Column(DateTime, nullable=True)
+    flagged_by = Column(Integer, ForeignKey("users.user_id"), nullable=True)
+
+    # Relationships - Specify which foreign key to use
+    user = relationship("User", back_populates="posts", foreign_keys=[user_id])
+    flagged_by_user = relationship("User", foreign_keys=[flagged_by])
     comments = relationship("Comment", back_populates="post")
     likes = relationship("Like", back_populates="post")

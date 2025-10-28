@@ -4,6 +4,7 @@ import {
     Users,
     FileText,
     TrendingUp,
+    AlertTriangle,
 } from "lucide-react";
 import { api } from "../../services/api";
 import { AnalyticsDashboard } from "../analytics/AnalyticsDashboard";
@@ -14,6 +15,7 @@ export const AdminDashboard = () => {
         total_users: 0,
         total_posts: 0,
         total_comments: 0,
+        posts_needing_review: 0,
     });
     const [recentUsers, setRecentUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -41,8 +43,8 @@ export const AdminDashboard = () => {
             <div className="space-y-6">
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 animate-pulse">
                     <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-4"></div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {[...Array(3)].map((_, i) => (
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        {[...Array(4)].map((_, i) => (
                             <div
                                 key={i}
                                 className="h-24 bg-gray-200 dark:bg-gray-700 rounded"
@@ -69,8 +71,8 @@ export const AdminDashboard = () => {
                 </div>
             </div>
 
-            {/* Stats Grid - Now 3 columns */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Stats Grid - Now 4 columns */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
                     <div className="flex items-center justify-between mb-2">
                         <Users className="w-8 h-8 text-blue-500" />
@@ -115,6 +117,21 @@ export const AdminDashboard = () => {
                         Comments
                     </div>
                 </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
+                    <div className="flex items-center justify-between mb-2">
+                        <AlertTriangle className="w-8 h-8 text-orange-500" />
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                            Flagged
+                        </span>
+                    </div>
+                    <div className="text-3xl font-bold text-gray-900 dark:text-white">
+                        {stats.posts_needing_review}
+                    </div>
+                    <div className="text-sm text-gray-600 dark:text-gray-400">
+                        Need Review
+                    </div>
+                </div>
             </div>
 
             {/* Recent Users */}
@@ -151,8 +168,8 @@ export const AdminDashboard = () => {
 
             {/* Analytics Section */}
             <AnalyticsDashboard />
-            
-            <AdminPostManagement />
+
+            <AdminPostManagement showFlaggedOnly={true} />
         </div>
     );
-};
+};;

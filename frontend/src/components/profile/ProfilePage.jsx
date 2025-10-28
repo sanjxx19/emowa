@@ -288,7 +288,7 @@ export const ProfilePage = () => {
                         <div className="text-center">
                             {/* Posts count (not clickable) */}
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                                {stats.posts_count}
+                                {stats.total_posts}
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-400">
                                 Posts

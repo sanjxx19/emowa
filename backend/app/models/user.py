@@ -12,10 +12,10 @@ class User(Base):
     password_hash = Column(String(255))
     created_at = Column(DateTime, default=datetime.utcnow)
     profile_pic_url = Column(String(500), nullable=True)
-    is_admin = Column(Boolean, default=False)  # New admin field
+    is_admin = Column(Boolean, default=False)
 
-    # Relationships
-    posts = relationship("Post", back_populates="user")
+    # Relationships - Specify foreign_keys to avoid ambiguity
+    posts = relationship("Post", back_populates="user", foreign_keys="Post.user_id")
     comments = relationship("Comment", back_populates="user")
     following = relationship(
         "UserRelation",

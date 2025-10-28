@@ -44,7 +44,8 @@ def post_to_response(post: Post) -> dict:
         "sentiment_confidence": post.sentiment_confidence,
         "is_sarcastic": post.is_sarcastic,
         "sarcasm_confidence": post.sarcasm_confidence,
-        "analyzed_at": post.analyzed_at
+        "analyzed_at": post.analyzed_at,
+        "is_flagged": post.is_flagged
     }
 
 @router.post("/", response_model=PostResponse)
@@ -77,7 +78,8 @@ def get_posts(
     include_sarcastic: bool = True,
     db: Session = Depends(get_db)
 ):
-    query = db.query(Post).join(User).filter(Post.is_deleted == False)
+    # FIXED: Specify the join condition explicitly
+    query = db.query(Post).join(User, Post.user_id == User.user_id).filter(Post.is_deleted == False)
 
     if sentiment_filter:
         query = query.filter(Post.sentiment_label == sentiment_filter.lower())
@@ -90,7 +92,11 @@ def get_posts(
 
 @router.get("/{post_id}", response_model=PostResponse)
 def get_post(post_id: int, db: Session = Depends(get_db)):
-    post = db.query(Post).join(User).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    # FIXED: Specify the join condition explicitly
+    post = db.query(Post).join(User, Post.user_id == User.user_id).filter(
+        Post.post_id == post_id,
+        Post.is_deleted == False
+    ).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     return post_to_response(post)
@@ -160,7 +166,8 @@ def get_user_posts(
     limit: int = 20,
     db: Session = Depends(get_db)
 ):
-    posts = db.query(Post).join(User).filter(
+    # FIXED: Specify the join condition explicitly
+    posts = db.query(Post).join(User, Post.user_id == User.user_id).filter(
         Post.user_id == user_id,
         Post.is_deleted == False
     ).order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
@@ -175,7 +182,11 @@ def update_post(
     current_user: User = Depends(get_current_user)
 ):
     """Update post title and/or content"""
-    post = db.query(Post).join(User).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    # FIXED: Specify the join condition explicitly
+    post = db.query(Post).join(User, Post.user_id == User.user_id).filter(
+        Post.post_id == post_id,
+        Post.is_deleted == False
+    ).first()
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
 
@@ -257,7 +268,6 @@ def get_post_likes(
 ):
     """Get like statistics for a post"""
     from app.models.like import Like
-    from sqlalchemy import func
 
     # Check if post exists
     post = db.query(Post).filter(Post.post_id == post_id, Post.is_deleted == False).first()
@@ -277,3 +287,50 @@ def get_post_likes(
         "total_likes": total_likes,
         "user_has_liked": user_has_liked
     }
+
+
+@router.post("/{post_id}/flag")
+def flag_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Flag a post for review"""
+    from datetime import datetime
+
+    post = db.query(Post).filter(Post.post_id == post_id, Post.is_deleted == False).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    if post.is_flagged:
+        raise HTTPException(status_code=400, detail="Post is already flagged")
+
+    post.is_flagged = True
+    post.flagged_at = datetime.utcnow()
+    post.flagged_by = current_user.user_id
+    db.commit()
+
+    return {"message": "Post flagged for review"}
+
+
+@router.delete("/{post_id}/flag")
+def unflag_post(
+    post_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Unflag a post (admin only)"""
+    # Check if user is admin
+    if not current_user.is_admin:
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    post = db.query(Post).filter(Post.post_id == post_id).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+
+    post.is_flagged = False
+    post.flagged_at = None
+    post.flagged_by = None
+    db.commit()
+
+    return {"message": "Post unflagged"}

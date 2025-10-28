@@ -246,26 +246,20 @@ export const CommentSection = ({ postId }) => {
                 className={`${isReply ? "ml-12 mt-3" : "mb-4"} bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 transition-colors`}
             >
                 <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => handleUserClick(comment.user_id)}
-                            className="flex items-center hover:opacity-80 transition-opacity"
-                        >
-                            <div>
-                                <div className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                                    {comment.user_name ||
-                                        `User ${comment.user_id}`}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">
-                                    {formatDate(comment.created_at)}
-                                    {comment.updated_at !==
-                                        comment.created_at && (
-                                        <span className="ml-1">(edited)</span>
-                                    )}
-                                </div>
-                            </div>
-                        </button>
-                    </div>
+                    <button
+                        onClick={() => handleUserClick(comment.user_id)}
+                        className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                    >
+                        <div className="font-medium text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                            {comment.user_name || `User ${comment.user_id}`}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">
+                            {formatDate(comment.created_at)}
+                            {comment.updated_at !== comment.created_at && (
+                                <span className="ml-1">(edited)</span>
+                            )}
+                        </div>
+                    </button>
 
                     {isOwner && !isEditing && (
                         <div className="flex gap-1">

@@ -36,11 +36,13 @@ def get_admin_stats(
     # Total comments
     total_comments = db.query(func.count(Comment.comment_id)).scalar()
 
-    # Posts needing review (highly negative sentiment)
+    # Posts needing review (manually flagged OR highly negative sentiment)
     posts_needing_review = db.query(func.count(Post.post_id)).filter(
-        Post.sentiment_label == "negative",
-        Post.sentiment_confidence > 0.8,
-        Post.is_deleted == False
+        Post.is_deleted == False,
+        (
+            (Post.is_flagged == True) |
+            ((Post.sentiment_label == "negative") & (Post.sentiment_confidence > 0.8))
+        )
     ).scalar()
 
     return {
@@ -70,11 +72,14 @@ def get_flagged_posts(
     db: Session = Depends(get_db),
     current_user: User = Depends(verify_admin)
 ):
-    """Get posts flagged for review"""
-    posts = db.query(Post).join(User).filter(
-        Post.sentiment_label == "negative",
-        Post.sentiment_confidence > 0.8,
-        Post.is_deleted == False
+    """Get manually flagged posts or AI-detected negative posts"""
+    # FIXED: Specify the join condition explicitly
+    posts = db.query(Post).join(User, Post.user_id == User.user_id).filter(
+        Post.is_deleted == False,
+        (
+            (Post.is_flagged == True) |  # Manually flagged
+            ((Post.sentiment_label == "negative") & (Post.sentiment_confidence > 0.8))  # AI flagged
+        )
     ).order_by(desc(Post.created_at)).offset(skip).limit(limit).all()
 
     # Format response with user info
@@ -86,6 +91,8 @@ def get_flagged_posts(
         "user_name": post.user.user_name,
         "sentiment_label": post.sentiment_label,
         "sentiment_confidence": post.sentiment_confidence,
+        "is_flagged": post.is_flagged,
+        "flagged_at": post.flagged_at,
         "created_at": post.created_at
     } for post in posts]
 

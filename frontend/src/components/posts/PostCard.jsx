@@ -7,6 +7,8 @@ import {
   User as UserIcon,
   Trash2,
   MoreVertical,
+  Flag,
+  Shield,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
@@ -24,6 +26,7 @@ export const PostCard = ({ post, onPostDeleted }) => {
   const [showMenu, setShowMenu] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const [deleting, setDeleting] = useState(false);
+  const [flagging, setFlagging] = useState(false);
 
   useEffect(() => {
     fetchLikeStatus();
@@ -110,6 +113,26 @@ export const PostCard = ({ post, onPostDeleted }) => {
     }
   };
 
+  const handleFlag = async (e) => {
+    e.stopPropagation();
+
+    if (!window.confirm("Are you sure you want to flag this post for review?")) {
+      return;
+    }
+
+    setFlagging(true);
+    try {
+      await api.flagPost(post.post_id);
+      alert("Post has been flagged for admin review");
+      setShowMenu(false);
+    } catch (err) {
+      console.error("Failed to flag post:", err);
+      alert(err.message || "Failed to flag post. Please try again.");
+    } finally {
+      setFlagging(false);
+    }
+  };
+
   const isOwner = currentUser?.user_id === post.user_id;
 
   return (
@@ -138,7 +161,7 @@ export const PostCard = ({ post, onPostDeleted }) => {
 
         <div className="flex items-start gap-2">
           {/* Sentiment/Sarcasm Tags */}
-          {(post.sentiment_label || post.is_sarcastic) && (
+          {(post.sentiment_label || post.is_sarcastic || post.is_flagged) && (
             <div className="flex flex-wrap gap-1">
               {post.sentiment_label && (
                 <span
@@ -155,11 +178,18 @@ export const PostCard = ({ post, onPostDeleted }) => {
                   Sarcastic
                 </span>
               )}
+
+              {post.is_flagged && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 border border-orange-200 dark:border-orange-700">
+                  <Flag className="w-3 h-3" />
+                  Flagged
+                </span>
+              )}
             </div>
           )}
 
-          {/* Menu Button - Only show if user owns the post */}
-          {isOwner && (
+          {/* Menu Button - Show for owner or if logged in */}
+          {currentUser && (
             <div className="relative">
               <button
                 onClick={(e) => {
@@ -174,14 +204,25 @@ export const PostCard = ({ post, onPostDeleted }) => {
               {/* Dropdown Menu */}
               {showMenu && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-lg shadow-xl border border-gray-200 dark:border-gray-600 z-10">
-                  <button
-                    onClick={handleDelete}
-                    disabled={deleting}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {deleting ? "Deleting..." : "Delete Post"}
-                  </button>
+                  {isOwner ? (
+                    <button
+                      onClick={handleDelete}
+                      disabled={deleting}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deleting ? "Deleting..." : "Delete Post"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleFlag}
+                      disabled={flagging || post.is_flagged}
+                      className="w-full flex items-center gap-2 px-4 py-2 text-left text-orange-600 dark:text-orange-400 hover:bg-orange-50 dark:hover:bg-orange-900/20 rounded-lg transition-colors disabled:opacity-50"
+                    >
+                      <Flag className="w-4 h-4" />
+                      {flagging ? "Flagging..." : post.is_flagged ? "Already Flagged" : "Flag Post"}
+                    </button>
+                  )}
                 </div>
               )}
             </div>

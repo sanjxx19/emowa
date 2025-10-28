@@ -250,6 +250,18 @@ class ApiService {
     async getUserStats(userId) {
         return this.request(`/users/${userId}/stats`, { skipAuth: true });
     }
+
+    async flagPost(postId) {
+        return this.request(`/posts/${postId}/flag`, {
+            method: "POST",
+        });
+    }
+
+    async unflagPost(postId) {
+        return this.request(`/posts/${postId}/flag`, {
+            method: "DELETE",
+        });
+    }
 }
 
 export const api = new ApiService();
