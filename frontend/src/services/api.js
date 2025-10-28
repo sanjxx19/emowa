@@ -203,6 +203,16 @@ class ApiService {
         return this.request(`/users/${userId}/follow-status`);
     }
 
+    async getFollowers(userId) {
+        // Assumes backend endpoint GET /api/v1/users/{user_id}/followers
+        return this.request(`/users/${userId}/followers`, { skipAuth: true });
+    }
+
+    async getFollowing(userId) {
+        // Assumes backend endpoint GET /api/v1/users/{user_id}/following
+        return this.request(`/users/${userId}/following`, { skipAuth: true });
+    }
+
     // Admin endpoints
     async getAdminStats() {
         return this.request("/admin/stats");

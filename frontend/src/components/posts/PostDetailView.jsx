@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Heart, MessageCircle, Share2, Send, Zap, Clock } from "lucide-react";
+import {
+    ArrowLeft,
+    Heart,
+    MessageCircle,
+    Share2,
+    User,
+    Zap,
+    Clock,
+} from "lucide-react";
 import { api } from "../../services/api";
-import { formatDate, getSentimentIcon, getSentimentColor } from "../../utils/formatting";
+import {
+    formatDate,
+    getSentimentIcon,
+    getSentimentColor,
+} from "../../utils/formatting";
 import { CommentSection } from "../comments/CommentSection";
 
 export const PostDetailView = () => {
@@ -28,7 +40,9 @@ export const PostDetailView = () => {
             setError(null);
         } catch (err) {
             console.error("Failed to fetch post:", err);
-            setError("Failed to load post. It may not exist or you don't have permission.");
+            setError(
+                "Failed to load post. It may not exist or you don't have permission.",
+            );
         } finally {
             setLoading(false);
         }
@@ -36,7 +50,6 @@ export const PostDetailView = () => {
 
     const fetchLikeStatus = async () => {
         try {
-            // Only fetch like status if user is authenticated
             if (api.token) {
                 const likeData = await api.getPostLikes(postId);
                 setLikeCount(likeData.total_likes || 0);
@@ -48,7 +61,6 @@ export const PostDetailView = () => {
     };
 
     const handleLike = async () => {
-        // Check if user is authenticated
         if (!api.token) {
             alert("Please log in to like posts");
             navigate("/login");
@@ -59,11 +71,11 @@ export const PostDetailView = () => {
             if (isLiked) {
                 await api.unlikePost(postId);
                 setIsLiked(false);
-                setLikeCount(prev => Math.max(0, prev - 1));
+                setLikeCount((prev) => Math.max(0, prev - 1));
             } else {
                 await api.likePost(postId);
                 setIsLiked(true);
-                setLikeCount(prev => prev + 1);
+                setLikeCount((prev) => prev + 1);
             }
         } catch (err) {
             console.error("Failed to toggle like:", err);
@@ -76,6 +88,12 @@ export const PostDetailView = () => {
             setShowShareTooltip(true);
             setTimeout(() => setShowShareTooltip(false), 2000);
         });
+    };
+
+    const handleUserClick = () => {
+        if (post?.user_id) {
+            navigate(`/user/${post.user_id}`);
+        }
     };
 
     if (loading) {
@@ -101,12 +119,15 @@ export const PostDetailView = () => {
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
                 <div className="container mx-auto px-4 max-w-4xl">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center">
-                        <div className="text-red-500 dark:text-red-400 text-xl mb-4">⚠️</div>
+                        <div className="text-red-500 dark:text-red-400 text-xl mb-4">
+                            ⚠️
+                        </div>
                         <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
                             Post Not Found
                         </h2>
                         <p className="text-gray-600 dark:text-gray-400 mb-6">
-                            {error || "The post you're looking for doesn't exist."}
+                            {error ||
+                                "The post you're looking for doesn't exist."}
                         </p>
                         <button
                             onClick={() => navigate("/")}
@@ -154,7 +175,14 @@ export const PostDetailView = () => {
                                     {post.title}
                                 </h1>
                                 <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                                    <span>User {post.user_id}</span>
+                                    <button
+                                        onClick={handleUserClick}
+                                        className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:underline"
+                                    >
+                                        <User className="w-3 h-3" />
+                                        {post.user_name ||
+                                            `User ${post.user_id}`}
+                                    </button>
                                     <span>•</span>
                                     <div className="flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
@@ -170,7 +198,9 @@ export const PostDetailView = () => {
                                         <span
                                             className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium border ${getSentimentColor(post.sentiment_label)}`}
                                         >
-                                            {getSentimentIcon(post.sentiment_label)}
+                                            {getSentimentIcon(
+                                                post.sentiment_label,
+                                            )}
                                             {post.sentiment_label}
                                         </span>
                                     )}
@@ -195,7 +225,8 @@ export const PostDetailView = () => {
                         {/* Sentiment Confidence */}
                         {post.sentiment_confidence && (
                             <div className="mb-4 text-xs text-gray-500 dark:text-gray-400">
-                                AI Confidence: {Math.round(post.sentiment_confidence * 100)}%
+                                AI Confidence:{" "}
+                                {Math.round(post.sentiment_confidence * 100)}%
                             </div>
                         )}
 
@@ -213,12 +244,16 @@ export const PostDetailView = () => {
                                     <Heart
                                         className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`}
                                     />
-                                    <span className="font-medium">{likeCount}</span>
+                                    <span className="font-medium">
+                                        {likeCount}
+                                    </span>
                                 </button>
 
                                 <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                                     <MessageCircle className="w-5 h-5" />
-                                    <span className="font-medium">Comments</span>
+                                    <span className="font-medium">
+                                        Comments
+                                    </span>
                                 </div>
                             </div>
 

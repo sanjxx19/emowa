@@ -1,8 +1,10 @@
+// FILE: frontend/src/components/profile/UserProfilePage.jsx
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { User, Calendar, UserPlus, UserMinus, ArrowLeft } from "lucide-react";
 import { api } from "../../services/api";
 import { PostCard } from "../posts/PostCard";
+import { UserListModal } from "./UserListModal"; // Import the modal
 
 export const UserProfilePage = () => {
     const { userId } = useParams();
@@ -18,11 +20,19 @@ export const UserProfilePage = () => {
     const [loading, setLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState(null);
 
+    // *** NEW STATE FOR MODAL ***
+    const [showUserListModal, setShowUserListModal] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [modalUsers, setModalUsers] = useState([]);
+    const [modalLoading, setModalLoading] = useState(false);
+    // *** END NEW STATE ***
+
     useEffect(() => {
         fetchProfileData();
     }, [userId]);
 
     const fetchProfileData = async () => {
+        // ...(existing fetch logic remains the same)
         try {
             setLoading(true);
 
@@ -61,6 +71,7 @@ export const UserProfilePage = () => {
         }
     };
 
+    // --- (handleFollowToggle remains the same) ---
     const handleFollowToggle = async () => {
         if (!api.token) {
             alert("Please log in to follow users");
@@ -74,7 +85,7 @@ export const UserProfilePage = () => {
                 setIsFollowing(false);
                 setStats((prev) => ({
                     ...prev,
-                    followers_count: prev.followers_count - 1,
+                    followers_count: Math.max(0, prev.followers_count - 1), // Prevent negative count
                 }));
             } else {
                 await api.followUser(userId);
@@ -90,6 +101,45 @@ export const UserProfilePage = () => {
         }
     };
 
+    // *** NEW FUNCTIONS TO HANDLE MODAL ***
+    const fetchAndShowUsers = async (type) => {
+        if (
+            (type === "followers" && stats.followers_count === 0) ||
+            (type === "following" && stats.following_count === 0)
+        ) {
+            return; // Don't open modal if count is 0
+        }
+
+        setModalTitle(type === "followers" ? "Followers" : "Following");
+        setShowUserListModal(true);
+        setModalLoading(true);
+        setModalUsers([]); // Clear previous users
+
+        try {
+            let users;
+            if (type === "followers") {
+                users = await api.getFollowers(userId);
+            } else {
+                users = await api.getFollowing(userId);
+            }
+            // Assuming API returns an array of user objects { user_id, user_name, profile_pic_url? }
+            setModalUsers(users || []);
+        } catch (err) {
+            console.error(`Failed to fetch ${type}:`, err);
+            // Optionally show an error message in the modal
+        } finally {
+            setModalLoading(false);
+        }
+    };
+
+    const closeModal = () => {
+        setShowUserListModal(false);
+        setModalUsers([]);
+        setModalTitle("");
+    };
+    // *** END NEW FUNCTIONS ***
+
+    // --- (Loading and user check remain the same) ---
     if (loading) {
         return (
             <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-8">
@@ -136,6 +186,7 @@ export const UserProfilePage = () => {
 
                     <div className="px-6 pb-6">
                         <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-16">
+                            {/* --- Profile Pic (remains same) --- */}
                             <div className="relative">
                                 {user.profile_pic_url ? (
                                     <img
@@ -151,6 +202,7 @@ export const UserProfilePage = () => {
                             </div>
 
                             <div className="flex-1 sm:mt-4">
+                                {/* --- User Name and Joined Date (remains same) --- */}
                                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {user.user_name}
                                 </h1>
@@ -166,6 +218,7 @@ export const UserProfilePage = () => {
                                 </p>
                             </div>
 
+                            {/* --- Follow/Unfollow/Edit Button (remains same) --- */}
                             {!isOwnProfile && api.token && (
                                 <button
                                     onClick={handleFollowToggle}
@@ -188,10 +241,9 @@ export const UserProfilePage = () => {
                                     )}
                                 </button>
                             )}
-
                             {isOwnProfile && (
                                 <button
-                                    onClick={() => navigate("/profile")}
+                                    onClick={() => navigate("/")} // Navigate to main page which shows ProfilePage via sidebar
                                     className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                                 >
                                     Edit Profile
@@ -199,9 +251,10 @@ export const UserProfilePage = () => {
                             )}
                         </div>
 
-                        {/* Stats */}
+                        {/* Stats - NOW CLICKABLE */}
                         <div className="grid grid-cols-3 gap-4 mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                             <div className="text-center">
+                                {/* Posts count (not clickable) */}
                                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {stats.posts_count}
                                 </div>
@@ -209,11 +262,11 @@ export const UserProfilePage = () => {
                                     Posts
                                 </div>
                             </div>
+                            {/* Followers Count - Clickable */}
                             <button
-                                onClick={() => {
-                                    /* TODO: Navigate to followers list */
-                                }}
-                                className="text-center hover:bg-gray-100 dark:hover:bg-gray-600/50 rounded transition-colors"
+                                onClick={() => fetchAndShowUsers("followers")}
+                                disabled={stats.followers_count === 0}
+                                className="text-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors disabled:opacity-50 disabled:cursor-default"
                             >
                                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {stats.followers_count}
@@ -222,11 +275,11 @@ export const UserProfilePage = () => {
                                     Followers
                                 </div>
                             </button>
+                            {/* Following Count - Clickable */}
                             <button
-                                onClick={() => {
-                                    /* TODO: Navigate to following list */
-                                }}
-                                className="text-center hover:bg-gray-100 dark:hover:bg-gray-600/50 rounded transition-colors"
+                                onClick={() => fetchAndShowUsers("following")}
+                                disabled={stats.following_count === 0}
+                                className="text-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors disabled:opacity-50 disabled:cursor-default"
                             >
                                 <div className="text-2xl font-bold text-gray-900 dark:text-white">
                                     {stats.following_count}
@@ -241,6 +294,7 @@ export const UserProfilePage = () => {
 
                 {/* User Posts */}
                 <div>
+                    {/* --- Posts rendering (remains same) --- */}
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
                         Posts by {user.user_name}
                     </h2>
@@ -259,6 +313,16 @@ export const UserProfilePage = () => {
                     )}
                 </div>
             </div>
+
+            {/* Render Modal Conditionally */}
+            {showUserListModal && (
+                <UserListModal
+                    title={modalTitle}
+                    users={modalUsers}
+                    onClose={closeModal}
+                    isLoading={modalLoading}
+                />
+            )}
         </div>
     );
 };

@@ -1,6 +1,22 @@
+// FILE: frontend/src/components/profile/ProfilePage.jsx
 import React, { useState, useEffect } from "react";
-import { User, Mail, Lock, Camera, Save, X, Edit2, CheckCircle } from "lucide-react";
+// Added MessageSquare, UserPlus, UserMinus
+import {
+    User,
+    Mail,
+    Lock,
+    Camera,
+    Save,
+    X,
+    Edit2,
+    CheckCircle,
+    MessageSquare,
+    UserPlus,
+    UserMinus,
+} from "lucide-react";
 import { api } from "../../services/api";
+import { PostCard } from "../posts/PostCard";
+import { UserListModal } from "./UserListModal"; // Import the modal
 
 export const ProfilePage = () => {
     const [user, setUser] = useState(null);
@@ -14,12 +30,18 @@ export const ProfilePage = () => {
         password: "",
         confirmPassword: "",
     });
-    const [userPosts, setUserPosts] = useState([]);
+    const [userPosts, setUserPosts] = useState([]); // State for user posts
     const [stats, setStats] = useState({
         total_posts: 0,
-        followers: 0,
-        following: 0,
+        followers_count: 0,
+        following_count: 0,
     });
+    const [loadingPosts, setLoadingPosts] = useState(true); // Separate loading state for posts
+
+    const [showUserListModal, setShowUserListModal] = useState(false);
+    const [modalTitle, setModalTitle] = useState("");
+    const [modalUsers, setModalUsers] = useState([]);
+    const [modalLoading, setModalLoading] = useState(false);
 
     useEffect(() => {
         fetchUserData();
@@ -27,6 +49,8 @@ export const ProfilePage = () => {
 
     const fetchUserData = async () => {
         try {
+            setLoading(true);
+            setLoadingPosts(true);
             const userData = await api.getCurrentUser();
             setUser(userData);
             setFormData({
@@ -36,31 +60,48 @@ export const ProfilePage = () => {
                 confirmPassword: "",
             });
 
-            // Fetch user's posts
-            const posts = await api.getPosts(0, 100);
-            const myPosts = posts.filter(post => post.user_id === userData.user_id);
-            setUserPosts(myPosts);
-            
-            setStats({
-                total_posts: myPosts.length,
-                followers: 0, // These would come from the API if implemented
-                following: 0,
-            });
+            const posts = await api.getUserPosts(userData.user_id);
+            setUserPosts(posts);
+            setLoadingPosts(false);
+
+            try {
+                const userStats = await api.getUserStats(userData.user_id);
+                setStats({
+                    total_posts: userStats.posts_count ?? posts.length,
+                    followers_count: userStats.followers_count ?? 0, // Use consistent naming
+                    following_count: userStats.following_count ?? 0, // Use consistent naming
+                });
+            } catch (statsErr) {
+                console.error(
+                    "Failed to fetch user stats, using post count only:",
+                    statsErr,
+                );
+                setStats({
+                    total_posts: posts.length,
+                    followers_count: 0, // Use consistent naming
+                    following_count: 0, // Use consistent naming
+                });
+            }
         } catch (err) {
             console.error("Failed to fetch user data:", err);
             setMessage({ type: "error", text: "Failed to load profile" });
+            setLoadingPosts(false);
         } finally {
             setLoading(false);
         }
     };
 
+    // --- (handleSubmit, handleCancel functions remain the same) ---
     const handleSubmit = async (e) => {
         e.preventDefault();
         setSaving(true);
         setMessage({ type: "", text: "" });
 
         // Validate passwords match if changing password
-        if (formData.password && formData.password !== formData.confirmPassword) {
+        if (
+            formData.password &&
+            formData.password !== formData.confirmPassword
+        ) {
             setMessage({ type: "error", text: "Passwords do not match" });
             setSaving(false);
             return;
@@ -85,12 +126,18 @@ export const ProfilePage = () => {
                 password: "",
                 confirmPassword: "",
             });
-            setMessage({ type: "success", text: "Profile updated successfully!" });
-            
+            setMessage({
+                type: "success",
+                text: "Profile updated successfully!",
+            });
+
             setTimeout(() => setMessage({ type: "", text: "" }), 3000);
         } catch (err) {
             console.error("Failed to update profile:", err);
-            setMessage({ type: "error", text: "Failed to update profile. Please try again." });
+            setMessage({
+                type: "error",
+                text: "Failed to update profile. Please try again.",
+            });
         } finally {
             setSaving(false);
         }
@@ -107,7 +154,48 @@ export const ProfilePage = () => {
         setMessage({ type: "", text: "" });
     };
 
+    const fetchAndShowUsers = async (type) => {
+        if (
+            (type === "followers" && stats.followers_count === 0) ||
+            (type === "following" && stats.following_count === 0)
+        ) {
+            return; // Don't open modal if count is 0
+        }
+
+        setModalTitle(type === "followers" ? "Followers" : "Following");
+        setShowUserListModal(true);
+        setModalLoading(true);
+        setModalUsers([]); // Clear previous users
+
+        try {
+            let users;
+            if (type === "followers") {
+                users = await api.getFollowers(userId);
+            } else {
+                users = await api.getFollowing(userId);
+            }
+            // Assuming API returns an array of user objects { user_id, user_name, profile_pic_url? }
+            setModalUsers(users || []);
+        } catch (err) {
+            console.error(`Failed to fetch ${type}:`, err);
+            // Optionally show an error message in the modal
+        } finally {
+            setModalLoading(false);
+        }
+    };
+    // *** END REVISED FUNCTION ***
+
+    // closeModal function remains the same
+    const closeModal = () => {
+        setShowUserListModal(false);
+        setModalUsers([]);
+        setModalTitle("");
+        // setMessage({ type: "", text: "" }); // Clear any error messages if you add them later
+    };
+
+    // --- (Loading and user check remain the same) ---
     if (loading) {
+        // Only show main profile loading initially
         return (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
                 <div className="animate-pulse space-y-6">
@@ -134,10 +222,11 @@ export const ProfilePage = () => {
             {/* Profile Header Card */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden transition-colors">
                 <div className="h-32 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
-                
+
                 <div className="px-6 pb-6">
                     <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-16">
                         <div className="relative">
+                            {/* --- Profile Picture Logic (remains same) --- */}
                             {formData.profile_pic_url ? (
                                 <img
                                     src={formData.profile_pic_url}
@@ -157,15 +246,21 @@ export const ProfilePage = () => {
                         </div>
 
                         <div className="flex-1 sm:mt-4">
+                            {/* --- User Name and Joined Date (remains same) --- */}
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                                 {user.user_name}
                             </h2>
                             <p className="text-gray-600 dark:text-gray-400">
-                                Member since {new Date(user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
+                                Member since{" "}
+                                {new Date(user.created_at).toLocaleDateString(
+                                    "en-US",
+                                    { month: "long", year: "numeric" },
+                                )}
                             </p>
                         </div>
 
                         <div className="flex gap-2">
+                            {/* --- Edit/Cancel Buttons (remains same) --- */}
                             {!editing ? (
                                 <button
                                     onClick={() => setEditing(true)}
@@ -188,48 +283,69 @@ export const ProfilePage = () => {
                         </div>
                     </div>
 
-                    {/* Stats */}
+                    {/* Stats - NOW CLICKABLE */}
                     <div className="grid grid-cols-3 gap-4 mt-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div className="text-center">
+                            {/* Posts count (not clickable) */}
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                                {stats.total_posts}
+                                {stats.posts_count}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Posts</div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Posts
+                            </div>
                         </div>
-                        <div className="text-center">
+                        {/* Followers Count - Clickable */}
+                        <button
+                            onClick={() => fetchAndShowUsers("followers")}
+                            disabled={stats.followers_count === 0}
+                            className="text-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors disabled:opacity-50 disabled:cursor-default"
+                        >
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                                {stats.followers}
+                                {stats.followers_count}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Followers</div>
-                        </div>
-                        <div className="text-center">
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Followers
+                            </div>
+                        </button>
+                        {/* Following Count - Clickable */}
+                        <button
+                            onClick={() => fetchAndShowUsers("following")}
+                            disabled={stats.following_count === 0}
+                            className="text-center p-2 rounded hover:bg-gray-100 dark:hover:bg-gray-600/50 transition-colors disabled:opacity-50 disabled:cursor-default"
+                        >
                             <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                                {stats.following}
+                                {stats.following_count}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">Following</div>
-                        </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                Following
+                            </div>
+                        </button>
                     </div>
                 </div>
             </div>
 
-            {/* Message Alert */}
+            {/* --- Message Alert (remains same) --- */}
             {message.text && (
-                <div className={`rounded-lg p-4 flex items-center gap-2 ${
-                    message.type === "success" 
-                        ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800" 
-                        : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800"
-                }`}>
-                    {message.type === "success" && <CheckCircle className="w-5 h-5" />}
+                <div
+                    className={`rounded-lg p-4 flex items-center gap-2 ${
+                        message.type === "success"
+                            ? "bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200 border border-green-200 dark:border-green-800"
+                            : "bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200 border border-red-200 dark:border-red-800"
+                    }`}
+                >
+                    {message.type === "success" && (
+                        <CheckCircle className="w-5 h-5" />
+                    )}
                     {message.text}
                 </div>
             )}
 
-            {/* Profile Information Card */}
+            {/* Profile Information Card (editing form) */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
                     Profile Information
                 </h3>
-
+                {/* --- Form fields (Username, Email, Profile Pic URL, Password) remain same --- */}
                 <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Username (Read-only) */}
                     <div>
@@ -261,11 +377,16 @@ export const ProfilePage = () => {
                         <input
                             type="email"
                             value={formData.user_email}
-                            onChange={(e) => setFormData({ ...formData, user_email: e.target.value })}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    user_email: e.target.value,
+                                })
+                            }
                             disabled={!editing}
                             className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                                editing 
-                                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white" 
+                                editing
+                                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                                     : "bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300"
                             }`}
                             required
@@ -283,12 +404,17 @@ export const ProfilePage = () => {
                         <input
                             type="url"
                             value={formData.profile_pic_url}
-                            onChange={(e) => setFormData({ ...formData, profile_pic_url: e.target.value })}
+                            onChange={(e) =>
+                                setFormData({
+                                    ...formData,
+                                    profile_pic_url: e.target.value,
+                                })
+                            }
                             disabled={!editing}
                             placeholder="https://example.com/profile.jpg"
                             className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
-                                editing 
-                                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500" 
+                                editing
+                                    ? "bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                                     : "bg-gray-50 dark:bg-gray-700/50 text-gray-700 dark:text-gray-300"
                             }`}
                         />
@@ -302,7 +428,8 @@ export const ProfilePage = () => {
                                     Change Password
                                 </h4>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                                    Leave blank if you don't want to change your password
+                                    Leave blank if you don't want to change your
+                                    password
                                 </p>
 
                                 <div className="space-y-4">
@@ -316,7 +443,12 @@ export const ProfilePage = () => {
                                         <input
                                             type="password"
                                             value={formData.password}
-                                            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    password: e.target.value,
+                                                })
+                                            }
                                             placeholder="Enter new password"
                                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                                             minLength={6}
@@ -333,7 +465,13 @@ export const ProfilePage = () => {
                                         <input
                                             type="password"
                                             value={formData.confirmPassword}
-                                            onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                                            onChange={(e) =>
+                                                setFormData({
+                                                    ...formData,
+                                                    confirmPassword:
+                                                        e.target.value,
+                                                })
+                                            }
                                             placeholder="Confirm new password"
                                             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
                                             minLength={6}
@@ -369,38 +507,93 @@ export const ProfilePage = () => {
                 </form>
             </div>
 
-            {/* Account Details */}
+            {/* Account Details (remains same) */}
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                     Account Details
                 </h3>
                 <div className="space-y-3 text-sm">
+                    {/* User ID, Created, Updated (remain same) */}
                     <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">User ID</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{user.user_id}</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                            User ID
+                        </span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                            {user.user_id}
+                        </span>
                     </div>
                     <div className="flex justify-between py-2 border-b border-gray-100 dark:border-gray-700">
-                        <span className="text-gray-600 dark:text-gray-400">Account Created</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                            Account Created
+                        </span>
                         <span className="font-medium text-gray-900 dark:text-white">
-                            {new Date(user.created_at).toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                            })}
+                            {new Date(user.created_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                },
+                            )}
                         </span>
                     </div>
                     <div className="flex justify-between py-2">
-                        <span className="text-gray-600 dark:text-gray-400">Last Updated</span>
+                        <span className="text-gray-600 dark:text-gray-400">
+                            Last Updated
+                        </span>
                         <span className="font-medium text-gray-900 dark:text-white">
-                            {new Date(user.updated_at).toLocaleDateString('en-US', { 
-                                year: 'numeric', 
-                                month: 'long', 
-                                day: 'numeric' 
-                            })}
+                            {new Date(user.updated_at).toLocaleDateString(
+                                "en-US",
+                                {
+                                    year: "numeric",
+                                    month: "long",
+                                    day: "numeric",
+                                },
+                            )}
                         </span>
                     </div>
                 </div>
             </div>
+
+            {/* User Posts Section - NEW */}
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 transition-colors">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                    Your Posts
+                </h3>
+                {loadingPosts ? (
+                    <div className="text-center py-4">
+                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                        <p className="mt-2 text-gray-600 dark:text-gray-400">
+                            Loading posts...
+                        </p>
+                    </div>
+                ) : userPosts.length > 0 ? (
+                    <div className="space-y-4">
+                        {userPosts.map((post) => (
+                            <PostCard
+                                key={post.post_id}
+                                post={post}
+                                onPostDeleted={() => fetchUserData()}
+                            /> // Refresh data if post deleted
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8">
+                        <MessageSquare className="w-12 h-12 text-gray-300 dark:text-gray-600 mx-auto mb-4" />
+                        <p className="text-gray-600 dark:text-gray-400">
+                            You haven't created any posts yet.
+                        </p>
+                    </div>
+                )}
+            </div>
+            {showUserListModal && (
+                <UserListModal
+                    title={modalTitle}
+                    users={modalUsers}
+                    onClose={closeModal}
+                    isLoading={modalLoading}
+                />
+            )}
         </div>
     );
 };
