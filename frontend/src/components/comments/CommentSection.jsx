@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react"; // Added useMemo
-// Added SortAsc, SortDesc, ThumbsUp icons
+import React, { useState, useEffect, useMemo } from "react";
 import {
     Send,
     Heart,
@@ -12,10 +11,12 @@ import {
     SortDesc,
     ThumbsUp,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { api } from "../../services/api";
 import { formatDate } from "../../utils/formatting";
 
 export const CommentSection = ({ postId }) => {
+    const navigate = useNavigate();
     const [comments, setComments] = useState([]);
     const [loading, setLoading] = useState(true);
     const [newComment, setNewComment] = useState("");
@@ -25,15 +26,14 @@ export const CommentSection = ({ postId }) => {
     const [editContent, setEditContent] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
-    const [sortOrder, setSortOrder] = useState("newest"); // 'newest', 'oldest', 'likes'
+    const [sortOrder, setSortOrder] = useState("newest");
 
     useEffect(() => {
         fetchComments();
         fetchCurrentUser();
-    }, [postId]); // Keep fetching comments only when postId changes initially
+    }, [postId]);
 
     const fetchCurrentUser = async () => {
-        // ... (fetchCurrentUser logic remains the same)
         try {
             const user = await api.getCurrentUser();
             setCurrentUser(user);
@@ -43,11 +43,9 @@ export const CommentSection = ({ postId }) => {
     };
 
     const fetchComments = async () => {
-        // ... (fetchComments logic remains the same)
         try {
-            setLoading(true); // Ensure loading is set
+            setLoading(true);
             const data = await api.getComments(postId);
-            // Ensure like_count exists, defaulting to 0 if null/undefined
             const commentsWithDefaults = data.map((c) => ({
                 ...c,
                 like_count: c.like_count || 0,
@@ -125,7 +123,6 @@ export const CommentSection = ({ postId }) => {
             const comment = comments.find((c) => c.comment_id === commentId);
             if (!api.token) {
                 alert("Please log in to like comments");
-                // Optional: redirect to login
                 return;
             }
             if (comment?.user_has_liked) {
@@ -133,7 +130,6 @@ export const CommentSection = ({ postId }) => {
             } else {
                 await api.likeComment(postId, commentId);
             }
-            // Refetch comments to get updated like counts and statuses
             await fetchComments();
         } catch (err) {
             console.error("Failed to toggle comment like:", err);
@@ -155,7 +151,7 @@ export const CommentSection = ({ postId }) => {
     };
 
     const sortedComments = useMemo(() => {
-        const sorted = [...comments]; // Create a shallow copy to sort
+        const sorted = [...comments];
         switch (sortOrder) {
             case "oldest":
                 sorted.sort(
@@ -163,7 +159,6 @@ export const CommentSection = ({ postId }) => {
                 );
                 break;
             case "likes":
-                // Sort by likes descending, then newest first as a tie-breaker
                 sorted.sort((a, b) => {
                     if (b.like_count !== a.like_count) {
                         return b.like_count - a.like_count;
@@ -171,7 +166,7 @@ export const CommentSection = ({ postId }) => {
                     return new Date(b.created_at) - new Date(a.created_at);
                 });
                 break;
-            case "newest": // Fallthrough default
+            case "newest":
             default:
                 sorted.sort(
                     (a, b) => new Date(b.created_at) - new Date(a.created_at),
@@ -179,26 +174,21 @@ export const CommentSection = ({ postId }) => {
                 break;
         }
         return sorted;
-    }, [comments, sortOrder]); // Re-sort only when comments or sortOrder changes
+    }, [comments, sortOrder]);
 
-    // Organize comments into parent and children using the *sorted* list
     const organizedComments = useMemo(() => {
         const commentMap = {};
         const rootComments = [];
 
-        // First pass: create a map of all comments using the sorted list
         sortedComments.forEach((comment) => {
             commentMap[comment.comment_id] = { ...comment, replies: [] };
         });
 
-        // Second pass: organize into tree structure
-        // Iterate through the *original* sorted list to maintain order
         sortedComments.forEach((comment) => {
             if (
                 comment.parent_comment_id &&
                 commentMap[comment.parent_comment_id]
             ) {
-                // Check if reply already added (can happen if parent appears after child in sorted list)
                 if (
                     !commentMap[comment.parent_comment_id].replies.find(
                         (r) => r.comment_id === comment.comment_id,
@@ -209,7 +199,6 @@ export const CommentSection = ({ postId }) => {
                     );
                 }
             } else {
-                // Check if root comment already added (handles potential duplicates if logic gets complex)
                 if (
                     !rootComments.find(
                         (r) => r.comment_id === comment.comment_id,
@@ -220,21 +209,8 @@ export const CommentSection = ({ postId }) => {
             }
         });
 
-        // Optional: Sort replies within each parent comment according to the global sort order
-        // This ensures replies maintain consistency, although chronological often makes sense for replies.
-        // If you want replies sorted like top-level comments:
-        // Object.values(commentMap).forEach(parentComment => {
-        //     parentComment.replies.sort((a, b) => {
-        //          switch (sortOrder) {
-        //              case 'oldest': return new Date(a.created_at) - new Date(b.created_at);
-        //              case 'likes': return (b.like_count || 0) - (a.like_count || 0) || (new Date(b.created_at) - new Date(a.created_at));
-        //              default: return new Date(b.created_at) - new Date(a.created_at);
-        //          }
-        //     });
-        // });
-
         return rootComments;
-    }, [sortedComments, sortOrder]); // Re-organize when sortedComments changes
+    }, [sortedComments, sortOrder]);
 
     const renderComment = (comment, isReply = false) => {
         const isOwner = currentUser?.user_id === comment.user_id;
@@ -393,7 +369,6 @@ export const CommentSection = ({ postId }) => {
                     </>
                 )}
 
-                {/* Render replies */}
                 {comment.replies && comment.replies.length > 0 && (
                     <div className="mt-3 space-y-3">
                         {comment.replies.map((reply) =>
@@ -425,7 +400,6 @@ export const CommentSection = ({ postId }) => {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Comments ({comments.length})
                 </h3>
-                {/* Sort Controls */}
                 <div className="flex flex-wrap gap-2">
                     <SortButton
                         order="newest"
@@ -445,28 +419,89 @@ export const CommentSection = ({ postId }) => {
                 </div>
             </div>
 
-            {/* New Comment Form (only show if logged in) */}
-            {api.token && (
+            {/* New Comment Form */}
+            {api.token ? (
                 <form onSubmit={handleSubmitComment} className="mb-6">
-                    {/* ... form content ... */}
+                    <div className="flex gap-2">
+                        <textarea
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                            placeholder="Write a comment..."
+                            className="flex-1 px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500 resize-none"
+                            rows={3}
+                            onKeyPress={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                    e.preventDefault();
+                                    handleSubmitComment(e);
+                                }
+                            }}
+                        />
+                    </div>
+                    <div className="flex justify-end mt-2">
+                        <button
+                            type="submit"
+                            disabled={submitting || !newComment.trim()}
+                            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                            {submitting ? (
+                                <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    Posting...
+                                </>
+                            ) : (
+                                <>
+                                    <Send className="w-4 h-4" />
+                                    Comment
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </form>
+            ) : (
+                <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg text-center">
+                    <p className="text-gray-600 dark:text-gray-400 mb-3">
+                        Please log in to comment
+                    </p>
+                    <button
+                        onClick={() => navigate("/login")}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        Log In
+                    </button>
+                </div>
             )}
 
             {/* Comments List */}
             {loading ? (
                 <div className="space-y-4">
-                    {" "}
-                    {/* ... loading skeleton ... */}{" "}
+                    {[...Array(3)].map((_, i) => (
+                        <div
+                            key={i}
+                            className="animate-pulse bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4"
+                        >
+                            <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/4 mb-2"></div>
+                            <div className="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+                        </div>
+                    ))}
                 </div>
             ) : comments.length > 0 ? (
-                // Use organizedComments which is derived from sortedComments
                 <div className="space-y-4">
                     {organizedComments.map((comment) => renderComment(comment))}
                 </div>
             ) : (
-                <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                    No comments yet. Be the first to comment!
-                </p>
+                <div className="text-center py-8">
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                        No comments yet. Be the first to comment!
+                    </p>
+                    {!api.token && (
+                        <button
+                            onClick={() => navigate("/login")}
+                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Log In to Comment
+                        </button>
+                    )}
+                </div>
             )}
         </div>
     );

@@ -162,6 +162,11 @@ export const ProfilePage = () => {
             return; // Don't open modal if count is 0
         }
 
+        if (!user?.user_id) {
+            console.error("User ID not available");
+            return;
+        }
+
         setModalTitle(type === "followers" ? "Followers" : "Following");
         setShowUserListModal(true);
         setModalLoading(true);
@@ -170,9 +175,9 @@ export const ProfilePage = () => {
         try {
             let users;
             if (type === "followers") {
-                users = await api.getFollowers(userId);
+                users = await api.getFollowers(user.user_id);
             } else {
-                users = await api.getFollowing(userId);
+                users = await api.getFollowing(user.user_id);
             }
             // Assuming API returns an array of user objects { user_id, user_name, profile_pic_url? }
             setModalUsers(users || []);
@@ -184,6 +189,7 @@ export const ProfilePage = () => {
         }
     };
     // *** END REVISED FUNCTION ***
+
 
     // closeModal function remains the same
     const closeModal = () => {
